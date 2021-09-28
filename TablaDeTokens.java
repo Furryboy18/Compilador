@@ -137,6 +137,14 @@ public class TablaDeTokens {
                                         if(aux != -1) //Existe
                                             agregarToken(act, "ID ya declarado", anterior);
                                         else{
+                                            if (yaa == true){
+                                                if(tip.equals("cadena")){
+                                                    agregarToken(act, "tipo.Dif", "entero");
+                                                    yaa = false;
+                                                    continue;
+                                                }
+                                                yaa = false;
+                                            }
                                             agregarToken(act, "id", anterior);
                                             if(boo == true){
                                                 tip = tipo.get(i).toString();
@@ -152,10 +160,17 @@ public class TablaDeTokens {
                                                     continue;
                                                 }
                                             }
+                                            if (yaa == true){
+                                                if(!tip.equals(getTipo(aux))){
+                                                    agregarToken(act, "tipo.Dif", getTipo(aux));
+                                                    yaa = false;
+                                                    continue;
+                                                }
+                                                yaa = false;
+                                            }
                                             agregarToken(act, "id", getTipo(aux));  
                                             if(boo == true){
                                                 tip = tipo.get(i).toString();
-                                                System.out.println("SIIIIIIIIII" + tip);
                                             }
                                             boo = false;  
                                         }else
