@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package compiladordefinitivo;
+package compilador;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -44,12 +44,14 @@ public class Depurador {
         boolean ban = true;
         if(linea.equals(""))                            //Verifica que la linea no este vacía
             return null;
-        while(linea.charAt(cont) == 32 || linea.charAt(cont) == 9){//Elimina los espacios o tabulaciones del principio (sangría)
+        /*while(linea.charAt(cont) == 32 || linea.charAt(cont) == 9){//Elimina los espacios o tabulaciones del principio (sangría)
             cont++;
             if(cont == linea.length()){
                 return null;
             }
-        }
+        }*/
+        
+        linea = linea.trim();
         
         do{
             if(cont >= linea.length()){                 //verifica su aún existen caracteres en la línea

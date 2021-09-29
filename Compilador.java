@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package compiladordefinitivo;
+package compilador;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -15,7 +15,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /** 
- * @version 4.3 Con condiciones if else
+ * @version 4.4 Con condiciones if else
  * @author martiz
  */
 public class Compilador {              
@@ -31,10 +31,7 @@ public class Compilador {
     public ArrayList compilar(File archivo){
         int cs, ds, es, num = 0;        
         ArrayList contenido = new ArrayList();
-        Pattern patNoLinea = Pattern.compile("[0-9]+[:]");
-        
-        //Sirve para guardar etiquetas que hacen referencia a bloques de codigo
-        
+        Pattern patNoLinea = Pattern.compile("[0-9]+[:]");                     
         
        // Pattern patAritmetico = Pattern.compile("[+]|[-]|[/]|[*]");
         //Pattern patComparacion = Pattern.compile("[<=?]|[>=?]|[=]"); 
@@ -52,7 +49,9 @@ public class Compilador {
         try {                   
             Scanner entrada = new Scanner(archivo);
             ArrayList varTipo = new ArrayList(); 
-            ArrayList varNom = new ArrayList();            
+            ArrayList varNom = new ArrayList();  
+            
+            //Sirve para guardar etiquetas que hacen referencia a bloques de codigo   
             Stack<String> bloques = new Stack<String>();
             
             String line, aux, aux2;
@@ -153,17 +152,18 @@ public class Compilador {
                             System.out.println(line);
                             //Obtiene la variable antes de la ',' (op de asignacion)                                                                                                                                      
                             index = line.indexOf(',');
-                            if(line.indexOf('#')==-1){                                
+                            if(line.indexOf('#')==-1){   
+                                //Determina la variable a la cual se asignaran los valores 
                                 esc = line.substring(0, index).strip();
+                                                                
+                                //Se deja ax(ensamblador) en 0 para ir agregando lo que se desea asignar
                                 contenido.add(cs++, "       mov ax, 0"); 
-                                fo1 = index;
-                                //fo2 = line.length()-1;
+                                
+                                fo1 = index;                                
                                 operando = '+';
                                 index++;
                                 while(fo1<line.length()-1){
-                                    //aux = line.substring(fo1,fo2).strip();
-                                    //Se van agregando lo que se desea asignar en ax(ensamblador)
-                                    
+                                                                      
                                     fo1 = line.indexOf('+', index);
                                     if (fo1 == -1 )
                                         fo1 = line.length()-1;                                
@@ -182,13 +182,7 @@ public class Compilador {
                                                                                         
                                     //Poner en aux el variable depsues del operando
                                     aux = line.substring(index,fo1).strip();
-                                    //System.out.println(" valor:"+aux+"< ");
-                                    //System.out.println(" indice op:"+fo1+"< ");
-                                    
-                                    
-                                    //System.out.println("Variable:"+aux+"<");
-                                                                   
-                                     
+                                                                                                                                            
                                     //Primer operando
                                     switch(operando){                                            
                                         case '-':
@@ -231,8 +225,7 @@ public class Compilador {
                                                 //contenido.add(cs++, "       mov ah,0"); 
                                             }
                                             break;
-                                        default:             
-                                            System.out.println(aux.length());
+                                        default:                                                        
                                             if(aux.length()>0){
                                                 contenido.add(cs++, "       \n;sumaa"); 
                                                 if(aux.charAt(0)<58 ){ //es numero constante                                                
@@ -253,7 +246,7 @@ public class Compilador {
                                 contenido.add(cs++, "       mov [bx], ax");  
                                 
                             }else{
-                                System.out.print("¿Como que esto es una cadena???");
+                                System.out.print("Realizar operaciones para asignar cadenas");
                                 //esc = line.substring(0, index).strip(); //la variable despues del ,
                             }   //line = esc.substring(esc.indexOf('#')+1, esc.length()-3);
                                                                                                       
@@ -321,7 +314,11 @@ public class Compilador {
                                     contenido.add(cs++, "       Mov ah, 9h");
                                     contenido.add(cs++, "       INT 21H");   
                                 }
-                            }                                                                                     
+                            }                 
+                            contenido.add(cs++, "       MOV dl,10 "); //Salto de linea
+                            contenido.add(cs++, "       MOV AH,2 ");
+                            contenido.add(cs++, "       INT 21H");  
+                            
                             System.out.println("");
                         }
                         
@@ -329,7 +326,8 @@ public class Compilador {
                                 /**
                                  * Esta parte asume que toda variable ´puesta en lectura
                                  * esta declarada en ensamblador para ser de lectura (con 
-                                 * los dos bytes al comienzo que indican tamaño de la cadena)
+                                 * los dos bytes al comienzo que indican tamaño de la 
+                                 * cadena y caracteres ingresado)
                                  */                                
                                 line = entrada.next();
                                 System.out.print(line+" ");                                
@@ -342,12 +340,7 @@ public class Compilador {
                                 contenido.add(cs++, "       MOV AH,2 ");
                                 contenido.add(cs++, "       INT 21H");                                
                         }    
-                        else if(line.equals("leern")){ //Esto viene en el programa TE02B12     
-                                /**
-                                 * Esta parte asume que toda variable ´puesta en lectura
-                                 * esta declarada en ensamblador para ser de lectura (con 
-                                 * los dos bytes al comienzo que indican tamaño de la cadena)
-                                 */                                
+                        else if(line.equals("leern")){   // Lectura para numeros                                                         
                                 line = entrada.next();
                                 System.out.print(line+" ");
                                 
@@ -356,8 +349,7 @@ public class Compilador {
                                     cs++;
                                     entrada_numerica=true;
                                 }                                
-                                
-                                //System.out.println("porque no me imtpime esto???");
+                                                                
                                 contenido.add(cs++, ";leer el dato");
                                 contenido.add(cs++, "       lea dx, n");
                                 contenido.add(cs++, "       mov ah, 0ah");
@@ -398,21 +390,27 @@ public class Compilador {
                         }   
                         
                         else if(line.equals("si") || line.equals("o_si")  ){   
+                            /*
+                             Todo if esta encerrado bajo dos etiquetas de modo
+                             que todo if tiene su propio bloque local y pone un 
+                             bloque mayor para encerrar todo en caso de la 
+                             existencia de una sentencia o_si
+                            */
                             if(line.equals("si")){
-                                bloques.push("si"+num);
-                                System.out.println("un if");
-                            }else{
-                                System.out.println("Que paso");
-                                aux= bloques.pop();                                
+                                bloques.push("si"+num);                                
+                            }else{  //'o_si' implica que hubo un 'si' antes
+                                aux= bloques.pop();  //Se elimina el bloque local del if anterior        
+                                //en dado caso que se cumpla la condicion se saltara 
+                                //    a la etiqueta del bloque mayor                                
                                 contenido.add(cs++, "       jmp "+bloques.peek()); 
-                                contenido.add(cs++, "       "+aux+":"); 
+                                contenido.add(cs++, "       "+aux+":"); //Etiqueta del bloque local
                             }
-                            bloques.push("osi"+num);
+                            bloques.push("osi"+num); //agregar nombre etiqueta local
                                 
-                            //bloques.push("si"+num); 
                             line = entrada.nextLine();                            
                             System.out.println(line);                                                        
-                                                                                                                                                                                             
+                            
+                            //Se determina el index donde está el operando
                             index = line.indexOf('<');
                             if(index == -1){
                                 index = line.indexOf('>');
@@ -422,8 +420,9 @@ public class Compilador {
                                         index = line.indexOf('=');                                        
                                 }
                             }
+                            
                             operando = line.charAt(index);
-                            if(line.indexOf('#') == -1){                                
+                            if(line.indexOf('#') == -1){ //No hay una cadena                            
                                 esc = line.substring(0, index).strip(); //Primer variable
                                 
                                 fo1 = line.indexOf("tons");
@@ -433,8 +432,6 @@ public class Compilador {
                                 }else{
                                     aux = line.substring(index+1, fo1).strip();
                                 }
-                                System.out.println(esc);
-                                System.out.println(aux);
                                 
                                 //Primera parte de la decision
                                 if(esc.charAt(0)<65){ //no tiene letras es constante
@@ -452,7 +449,7 @@ public class Compilador {
                                     contenido.add(cs++, "       cmp ax,[bx]");
                                 }
                                 
-                                //Considera los salton con signo de ensamblador
+                                //Considera los saltos con signo de ensamblador
                                 switch(operando){                                            
                                      case '>':                                              
                                         if(line.charAt(index+1)== '='){ //es numero constante
@@ -474,20 +471,18 @@ public class Compilador {
                                     default:             
                                        contenido.add(cs++, "       jne "+ bloques.peek()+ ";=");                                                                                           
                                 }                                
-                            }
+                            }//Else es cadena
                         }
                         
                         else if(line.equals("fin_si")){ 
                             
                             line = entrada.nextLine();                            
-                            System.out.println(line);
-                            //System.out.println("fin_si de linea "+num);
+                            System.out.println(line);                            
                             esc = bloques.pop();                              
                             contenido.add(cs++, "       "+ esc + ": ;"+num);                            
                             contenido.add(cs++, "       "+ bloques.pop() + ":");
                         }
-                                                                        
-                        //¿Deberiamos tener un metodo para convertir cadena a numero?                                                                                               
+                                                                                                                                                                                            
                         else if(line.equals("!")){                            
                             System.out.print("\n");
                             entrada.nextLine();

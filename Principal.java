@@ -1,4 +1,4 @@
-package compiladordefinitivo;
+package compilador;
 
 import java.io.File;
 import java.util.ArrayList;
