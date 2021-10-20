@@ -57,7 +57,7 @@ public class Compilador {
             String line, aux, aux2;
             String esc = "";
             char operando;
-            int index, fo1, fo2;
+            int index, fo1;
             boolean entrada_numerica = false;
             boolean excepcion = false;
             
@@ -155,7 +155,7 @@ public class Compilador {
                             if(line.indexOf('#')==-1){   
                                 //Determina la variable a la cual se asignaran los valores 
                                 esc = line.substring(0, index).strip();
-                                System.out.println(line);
+                                //System.out.println(line);
                                 
                                 aritmetica(line.substring(index + 1 ,line.length() -1));
                                 
@@ -455,12 +455,12 @@ public class Compilador {
                                 default:                                                 
                                     bloques.push("sa"+num);
                                     contenido.add(cs++, "       jne "+ bloques.peek()+ ";=");                                          
-                            }                                                                                                                      
-                                                                                  
-                            
+                            }                                                                                                                                                                                                                                    
                         }
                         
                         else if(line.equals("fin_mientras")){
+                            line = entrada.nextLine();                            
+                            System.out.println(line); 
                             /*
                              *Se deben voltear lo bloques en el mientras para que queden de la fomra
                                in:
@@ -473,6 +473,69 @@ public class Compilador {
                             aux = bloques.pop();                            
                             contenido.add(cs++, "       jmp "+ bloques.pop()+ ";=/");                              
                             contenido.add(cs++, "       "+aux+":"); 
+                        }
+                        
+                        else if(line.equals("desde")){     
+                            contenido.add(cs++, "       push cx");  
+                            line = entrada.nextLine(); 
+                            System.out.println(line);                             
+                            
+                            index = line.indexOf(',');
+                            aux = line.substring(0, index).strip(); //Variable contador
+                            fo1 = line.indexOf("hasta");                            
+                            esc = line.substring(index+1, fo1).strip(); // Valor inicial del contador
+                            //System.out.println("aux: "+aux+"\nesc: "+esc);
+                            
+                            //Leer base de la variable contador
+                            contenido.add(cs++, "       Lea bx,"+aux);                            
+                                                         
+                            //Leer valor inicial
+                            if(esc.charAt(0)<65){ //no tiene letras es constante
+                                contenido.add(cs++, "       mov dx,"+esc);
+                            }else{                             
+                                contenido.add(cs++, "       mov ax,bx");     
+                                contenido.add(cs++, "       Lea bx,"+esc);
+                                contenido.add(cs++, "       mov dx,[bx]");
+                                contenido.add(cs++, "       mov bx,ax"); 
+                            }
+                            /*En este punto dx tiene el valor incial y bx la 
+                            direccion base de la variable contador
+                            */
+                            
+                            //Asignamos a la variable contador el valor inicial
+                            contenido.add(cs++, "       mov [bx],dx");                                
+                            
+                            //Valor final del ciclo                                            
+                            esc = line.substring(fo1+5, line.length()-4).strip();
+                            //System.out.println("fin:"+esc);
+                            
+                            if(esc.charAt(0)<65){ //no tiene letras es constante
+                                contenido.add(cs++, "       mov cx,"+esc);                                
+                            }else{                
+                                contenido.add(cs++, "       mov ax,bx");                                                                
+                                contenido.add(cs++, "       Lea bx,"+esc);                                                                
+                                contenido.add(cs++, "       mov cx,[bx]");                                                                                                                                
+                                contenido.add(cs++, "       mov bx,ax");                                                                
+                            } 
+                            //cx tiene el vlaor final del ciclo
+                            
+                            bloques.push("in"+num);                            
+                            contenido.add(cs++, "       "+bloques.peek()+":");  
+                            contenido.add(cs++, "       push cx");
+                            contenido.add(cs++, "       push bx");
+                        }
+                        
+                        else if(line.equals("fin_desde")){   
+                            line = entrada.nextLine();                            
+                            System.out.println(line);                                                                                                               
+                                                                                                                
+                            contenido.add(cs++, "       pop bx"); 
+                            contenido.add(cs++, "       pop cx"); 
+                            contenido.add(cs++, "       inc word ptr [bx]");                             
+                            contenido.add(cs++, "       cmp [bx],cx");                             
+                            contenido.add(cs++, "       jl "+ bloques.pop()+ ";<");                                                                 
+                            contenido.add(cs++, "       pop cx");  
+                                                                                                              
                         }
                                                                                                                                                                                             
                         else if(line.equals("!")){                            

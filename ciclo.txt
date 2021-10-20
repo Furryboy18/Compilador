@@ -1,28 +1,17 @@
 Procedimiento principal iniciar
 	entero cc!
+	entero a!
 	hacer cc, 0!
-	Mientras cc<5 tons
+	Mientras cc<0 tons
 		escribir cc!  
 		hacer cc, cc+1! 	
-	fin_mientras
+	fin_mientras	
 
-		
+	Desde a,1 hasta 10 tons
+		escribir a!  
+	fin_desde	
 Fin_proc
 
-
---mientras
---in:
---jnc sa
---{
-
-
---jmp in
---}
---sa1:
-
---	Desde a = 1 hasta a = 10 tons
---		hacer c,1!
---	fin_desde
 
 
 

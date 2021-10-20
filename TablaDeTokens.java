@@ -254,11 +254,13 @@ public class TablaDeTokens {
         reservadas.add("fin_si");        
         reservadas.add("hacer");
         reservadas.add("escribir");
-        reservadas.add("escribirn");
-        reservadas.add("mientras");
+        reservadas.add("mientras");        
+        reservadas.add("desde");
+        reservadas.add("hasta");
         reservadas.add("tons");
         reservadas.add("fin_mientras");
         reservadas.add("fin_proc");
+        reservadas.add("fin_desde");
         reservadas.add("fin");
         reservadas.add("leer");
         reservadas.add("leern");
