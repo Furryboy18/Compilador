@@ -10,7 +10,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * @version 4.0.1
+ * @version 5.0.5
  * @author martiz
  * @author cris
  */
@@ -36,8 +36,8 @@ public class TablaDeTokens {
         String[] comp = {"<",">","<=",">=","=","/="};
         String[] arit = {"*","+","-","/","(",")"};
         String act = "";
-        String tip = "";
-        boolean esHacer = false, coma = false, esMient = false;
+        String tip = "";//ultimo tipo de variable registrado
+        boolean esHacer = false, coma = false, esComp = false, cmp = false;
         for(int i = 0; i < conte.size();i++){
             act = conte.get(i).toString();
             if(act.charAt(0) >= 48 && act.charAt(0) <= 57){ //Si empieza con un numero no es ni reservada ni variable
@@ -92,8 +92,13 @@ public class TablaDeTokens {
                         
                         if(esResevada(getLexema(i-1).toLowerCase())){
                             agregarToken(act, "error", "-");
-                        }else
+                        }else{
+                            if(coma == true){
+                                agregarToken("", "valor NULO", "nulo");
+                                coma = false;
+                            }
                             agregarToken(act, "fin_de_linea", "-");
+                        }
                     }
                     else{
                         if(act.equals(",")){
@@ -114,8 +119,36 @@ public class TablaDeTokens {
                                         agregarToken(act, act, "asignar valor");
                                     }else if(act.equals("Mientras")){
                                         agregarToken(act, act, "ciclo");
-                                    }else if(act.equals("Si")){
+                                        esComp = true;
+                                    }else if(act.equals("Si") || act.equals("si")){
                                         agregarToken(act, act, "condicion");
+                                        esComp = true;
+                                    }else if(act.equals("o_si")){
+                                        agregarToken(act, act, "condicion");
+                                        esComp = true;
+                                    }else if(act.equals("tons")){
+                                        if(esComp == true){
+                                            String pt = tipo.get(i-1).toString();//anterior tipo
+                                            String cd = tipo.get(i-2).toString();//ante anterior tipo
+                                            String pc = tipo.get(i-3).toString();//primer tipo
+                                            //System.out.println(pc+" "+cd+" "+pt);
+                                            if(pt.equals("ciclo") || cd.equals("ciclo") || pc.equals("ciclo"))
+                                                agregarToken(act, "ErrorCond", "-");
+                                            else{
+                                                if(pc.equals(pt)){
+                                                    if(cd.equals("comp")){
+                                                        agregarToken(act, act, "cond.Cumplida");
+                                                    }else{
+                                                        agregarToken(act, "ErrorCond", "-");
+                                                    }
+                                                } else {
+                                                    agregarToken(act, "ErrorDifValCond", "-");
+                                                }
+                                            }
+                                            esComp = false;
+                                        }else{
+                                            agregarToken(act, "ErrorSM", "-");
+                                        }
                                     }else{
                                         agregarToken(act, act, "-");
                                     }
@@ -124,7 +157,7 @@ public class TablaDeTokens {
                             }
                             for(int x = 0; x <comp.length; x++){
                                 if(act.equals(comp[x])){
-                                    agregarToken(act, "Op.comparacion", "-");
+                                    agregarToken(act, "Op.comparacion", "comp");
                                     tom = true;
                                 }
                             }
@@ -159,12 +192,10 @@ public class TablaDeTokens {
                                             }
                                             //fin validacion de hacer
                                             agregarToken(act, "id", anterior);
-                                            //validacion de hacer
-                                            if(esHacer == true){
-                                                tip = tipo.get(i).toString();
-                                            }
+                                            //ultimo tipo de variable registrado
+                                            tip = tipo.get(i).toString();
+                                            //fin tipo
                                             esHacer = false;
-                                            //fin validacion de hacer
                                         }
                                     }else{
                                         if(aux != -1){ //Existe
@@ -187,11 +218,10 @@ public class TablaDeTokens {
                                             //fin validacion de hacer
                                             agregarToken(act, "id", getTipo(aux));  
                                             //validacion de hacer
-                                            if(esHacer == true){
-                                                tip = tipo.get(i).toString();
-                                            }
-                                            esHacer = false;  
-                                            //fin validacion de hacer
+                                            //ultimo tipo de variable registrado
+                                            tip = tipo.get(i).toString();
+                                            //fin tipo
+                                            esHacer = false;
                                         }else
                                             agregarToken(act, "Desconocido", "-"); 
                                     } 
@@ -240,11 +270,17 @@ public class TablaDeTokens {
             }else if(token.equals("tipo.Dif")){
                 System.out.printf("Asignacion a variable otro tipo de dato distinto, %d\n", linea);                
                 error = true;
-            }else if(token.equals("errorCiclo")){
-                System.out.printf("Error de ciclo, %d\n", linea);                
+            }else if(token.equals("valor NULO")){
+                System.out.printf("No se le asigna ningun valor a esta variable, %d\n", linea);                
                 error = true;
-            }else if(token.equals("errorDecicion")){
-                System.out.printf("Error de decicion, %d\n", linea);                
+            }else if(token.equals("ErrorCond")){
+                System.out.printf("Condicion invalida o inexistente, %d\n", linea);                
+                error = true;
+            }else if(token.equals("ErrorDifValCond")){
+                System.out.printf("Simbolo no valido o comparacion de tipos distintos, %d\n", linea);                
+                error = true;
+            }else if(token.equals("ErrorSM")){
+                System.out.printf("No se encontro un Si o un Mientras que maneje la condicion, %d\n", linea);                
                 error = true;
             }
         }
