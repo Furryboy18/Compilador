@@ -10,7 +10,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * @version 4.0.1
+ * @version 5.0.5
  * @author martiz
  * @author cris
  */
@@ -36,8 +36,8 @@ public class TablaDeTokens {
         String[] comp = {"<",">","<=",">=","=","/="};
         String[] arit = {"*","+","-","/","(",")"};
         String act = "";
-        String tip = "";
-        boolean boo = false, yaa = false;
+        String tip = "";//ultimo tipo de variable registrado
+        boolean esHacer = false, coma = false, esComp = false, cmp = false;
         for(int i = 0; i < conte.size();i++){
             act = conte.get(i).toString();
             if(act.charAt(0) >= 48 && act.charAt(0) <= 57){ //Si empieza con un numero no es ni reservada ni variable
@@ -54,14 +54,16 @@ public class TablaDeTokens {
                         agregarToken(act, "Desconocido", "-");
                     }
                     else{
-                        if (yaa == true){
+                        //validacion de hacer
+                        if (coma == true){
                             if(tip.equals("cadena")){
                                 agregarToken(act, "tipo.Dif", "entero");
-                                yaa = false;
+                                coma = false;
                                 continue;
                             }
-                            yaa = false;
+                            coma = false;
                         }
+                        //fin validacion de hacer
                         agregarToken(act, "numero", "entero");
                     }
                 }
@@ -69,14 +71,16 @@ public class TablaDeTokens {
             else{
                 if(act.charAt(0) == 35){
                     if(act.charAt(act.length()-1) == 35){
-                        if (yaa == true){
+                        //validacion de hacer
+                        if (coma == true){
                             if(tip.equals("entero")){
                                 agregarToken(act.substring(1, act.length()-1), "tipo.Dif", "cadena");
-                                yaa = false;
+                                coma = false;
                                 continue;
                             }
-                            yaa = false;
+                            coma = false;
                         }
+                        //fin validacion de hacer
                         agregarToken(act.substring(1, act.length()-1), "literal", "cadena");
                     }
                     else{
@@ -88,13 +92,18 @@ public class TablaDeTokens {
                         
                         if(esResevada(getLexema(i-1).toLowerCase())){
                             agregarToken(act, "error", "-");
-                        }else
+                        }else{
+                            if(coma == true){
+                                agregarToken("", "valor NULO", "nulo");
+                                coma = false;
+                            }
                             agregarToken(act, "fin_de_linea", "-");
+                        }
                     }
                     else{
                         if(act.equals(",")){
                             agregarToken(act, "Op.Asign", "-");
-                            yaa = true;
+                            coma = true;
                         }
                         else{
                             boolean tom = false;
@@ -105,15 +114,50 @@ public class TablaDeTokens {
                                 }
                             }*/
                             if(esResevada(act.toLowerCase())){
-                                    if(act.equals("hacer"))
-                                        boo = true;
-                                    agregarToken(act, act, "-");
+                                    if(act.equals("hacer")){
+                                        esHacer = true;
+                                        agregarToken(act, act, "asignar valor");
+                                    }else if(act.equals("Mientras")){
+                                        agregarToken(act, act, "ciclo");
+                                        esComp = true;
+                                    }else if(act.equals("Si") || act.equals("si")){
+                                        agregarToken(act, act, "condicion");
+                                        esComp = true;
+                                    }else if(act.equals("o_si")){
+                                        agregarToken(act, act, "condicion");
+                                        esComp = true;
+                                    }else if(act.equals("tons")){
+                                        if(esComp == true){
+                                            String pt = tipo.get(i-1).toString();//anterior tipo
+                                            String cd = tipo.get(i-2).toString();//ante anterior tipo
+                                            String pc = tipo.get(i-3).toString();//primer tipo
+                                            //System.out.println(pc+" "+cd+" "+pt);
+                                            if(pt.equals("ciclo") || cd.equals("ciclo") || pc.equals("ciclo"))
+                                                agregarToken(act, "ErrorCond", "-");
+                                            else{
+                                                if(pc.equals(pt)){
+                                                    if(cd.equals("comp")){
+                                                        agregarToken(act, act, "cond.Cumplida");
+                                                    }else{
+                                                        agregarToken(act, "ErrorCond", "-");
+                                                    }
+                                                } else {
+                                                    agregarToken(act, "ErrorDifValCond", "-");
+                                                }
+                                            }
+                                            esComp = false;
+                                        }else{
+                                            agregarToken(act, "ErrorSM", "-");
+                                        }
+                                    }else{
+                                        agregarToken(act, act, "-");
+                                    }
                                     tom = true;
                                     
                             }
                             for(int x = 0; x <comp.length; x++){
                                 if(act.equals(comp[x])){
-                                    agregarToken(act, "Op.comparacion", "-");
+                                    agregarToken(act, "Op.comparacion", "comp");
                                     tom = true;
                                 }
                             }
@@ -137,19 +181,21 @@ public class TablaDeTokens {
                                         if(aux != -1) //Existe
                                             agregarToken(act, "ID ya declarado", anterior);
                                         else{
-                                            if (yaa == true){
+                                            //validacion de hacer
+                                            if (coma == true){
                                                 if(tip.equals("cadena")){
                                                     agregarToken(act, "tipo.Dif", "entero");
-                                                    yaa = false;
+                                                    coma = false;
                                                     continue;
                                                 }
-                                                yaa = false;
+                                                coma = false;
                                             }
+                                            //fin validacion de hacer
                                             agregarToken(act, "id", anterior);
-                                            if(boo == true){
-                                                tip = tipo.get(i).toString();
-                                            }
-                                            boo = false;
+                                            //ultimo tipo de variable registrado
+                                            tip = tipo.get(i).toString();
+                                            //fin tipo
+                                            esHacer = false;
                                         }
                                     }else{
                                         if(aux != -1){ //Existe
@@ -160,19 +206,22 @@ public class TablaDeTokens {
                                                     continue;
                                                 }
                                             }
-                                            if (yaa == true){
+                                            //validacion de hacer
+                                            if (coma == true){
                                                 if(!tip.equals(getTipo(aux))){
                                                     agregarToken(act, "tipo.Dif", getTipo(aux));
-                                                    yaa = false;
+                                                    coma = false;
                                                     continue;
                                                 }
-                                                yaa = false;
+                                                coma = false;
                                             }
+                                            //fin validacion de hacer
                                             agregarToken(act, "id", getTipo(aux));  
-                                            if(boo == true){
-                                                tip = tipo.get(i).toString();
-                                            }
-                                            boo = false;  
+                                            //validacion de hacer
+                                            //ultimo tipo de variable registrado
+                                            tip = tipo.get(i).toString();
+                                            //fin tipo
+                                            esHacer = false;
                                         }else
                                             agregarToken(act, "Desconocido", "-"); 
                                     } 
@@ -220,6 +269,18 @@ public class TablaDeTokens {
                 error = true;
             }else if(token.equals("tipo.Dif")){
                 System.out.printf("Asignacion a variable otro tipo de dato distinto, %d\n", linea);                
+                error = true;
+            }else if(token.equals("valor NULO")){
+                System.out.printf("No se le asigna ningun valor a esta variable, %d\n", linea);                
+                error = true;
+            }else if(token.equals("ErrorCond")){
+                System.out.printf("Condicion invalida o inexistente, %d\n", linea);                
+                error = true;
+            }else if(token.equals("ErrorDifValCond")){
+                System.out.printf("Simbolo no valido o comparacion de tipos distintos, %d\n", linea);                
+                error = true;
+            }else if(token.equals("ErrorSM")){
+                System.out.printf("No se encontro un Si o un Mientras que maneje la condicion, %d\n", linea);                
                 error = true;
             }
         }
