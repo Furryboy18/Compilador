@@ -37,7 +37,7 @@ public class TablaDeTokens {
         String[] arit = {"*","+","-","/","(",")"};
         String act = "";
         String tip = "";//ultimo tipo de variable registrado
-        boolean esHacer = false, coma = false, esComp = false, cmp = false;
+        boolean esHacer = false, coma = false, esComp = false;
         for(int i = 0; i < conte.size();i++){
             act = conte.get(i).toString();
             if(act.charAt(0) >= 48 && act.charAt(0) <= 57){ //Si empieza con un numero no es ni reservada ni variable
@@ -127,7 +127,7 @@ public class TablaDeTokens {
                                         agregarToken(act, act, "condicion");
                                         esComp = true;
                                     }else if(act.equals("tons")){
-                                        if(esComp == true){
+                                        /*if(esComp == true){
                                             String pt = tipo.get(i-1).toString();//anterior tipo
                                             String cd = tipo.get(i-2).toString();//ante anterior tipo
                                             String pc = tipo.get(i-3).toString();//primer tipo
@@ -148,7 +148,9 @@ public class TablaDeTokens {
                                             esComp = false;
                                         }else{
                                             agregarToken(act, "ErrorSM", "-");
-                                        }
+                                        }*/
+                                        esComp = false;
+                                        agregarToken(act, act, "-");
                                     }else{
                                         agregarToken(act, act, "-");
                                     }
