@@ -1,0 +1,28 @@
+Procedimiento principal iniciar
+	entero a!
+	entero b!	
+	hacer a, 6! 
+	hacer b, 7! 
+
+	Si a < b tons
+		--Va a imprimir quiero pan con leche
+		escribir #B es mayor #!   --a		
+	fin_si
+
+	Si a > b tons
+		--Va a imprimir quiero pan con leche
+		escribir #A es mayor #!   --a
+		si b < 0 tons
+			escribir #b es negativa #!
+		fin_si
+	o_Si a = b tons
+		escribir #A es igual #!   --a
+	o_si b = 7 tons
+		escribir #B es igual a 7#!   
+	fin_si
+Fin_proc
+
+
+
+
+

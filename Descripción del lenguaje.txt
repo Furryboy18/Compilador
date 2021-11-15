@@ -1,0 +1,106 @@
+Codigo XD
+
+El codigo XD es una lenguaje de programación generado por
+estudiantes del ITCG. Este lenguaje no tiene distinción entre
+mayusculas y minusuclas, hace uso del caracter '!' para 
+terminar sentencias, para dar enfasis.
+
+El código se basa en un procedimeinto principal de la forma:
+
+	Procedimeinto principal iniciar
+		...
+	Fin_proc
+
+En el cual se ejecutan todas las instrucciones. Todo código en
+este lenguaje debe tener este procedimiento.
+
+******************Declaración de variables************************
+Para declarar variables se hace uso de la sigueitne sintaxis:
+	[tipo] [nombre]!
+donde el tipo puede ser entero o cadena. Las cadenas tienen una
+longitud de 50 caracteres y los enteros son valores negativos 
+y positivos de 6 bits.
+Las cadenas se escriben entre # de la forma:
+	#Una cadena es cualquier cosa entre#
+
+
+*********************Asignación:**********************************
+Para asignar o modificar el valor de una variable declara se
+hace uso de la palabra reservada 'hacer' de la gorma:
+	hacer [variable], [dato entero]!
+o tambien se puede combinar con operadores aritmeticos:
+	hacer [variable], [dato entero] + [dato entero]!
+El dato entero puede ser una constante o una variable.
+Por el momento la asignación solo sirve para valores enteros.
+Los operadores de aritmeticos son:
+	+
+	-
+	/
+	*	
+
+*****************Impresión en pantalla****************************
+para imprimir se hace uso de la palabra reservada escribir:
+	escribir [variable o constante]!
+Funciona tanto para enteros o cadenas. Solo permite escribir
+un valor a la vez.
+
+*********************Lectura de datos*****************************
+Para leer un valor de tipo cadena se hace uso de la instrucción
+leer:
+	leer [variable cadena]!
+Para leer un valor de tipo numerico se hace uso de la instrucción
+leern:
+	leern [variable entera]!
+Toda variable usada debe ser declarada previamente.
+
+**************************Decisiones******************************
+Para decisiones se hace uso de bloques del siguiente formato:
+	Si [entero] > [entero] tons
+		...
+	o_Si [entero] = [entero] tons
+		... 
+	fin_si
+
+Los operadores de para decisiones son:
+	=
+	>
+	<
+	<=
+	>=
+	\=
+	ó
+	í
+
+***************************Ciclos********************************
+El código soporta dos tipos de ciclos, ciclos mientras y desde.
+Los ciclos desde evaluan primero la condición, los ciclos
+mientras evaluan al final la condición.
+Formato bloque mientras:
+	Mientras [entero]<[entero] tons
+		...	
+	fin_mientras
+Formato bloque desde:
+	Desde [variable entero],[entero] hasta [entero] tons
+		escribir a!  
+	fin_desde	
+Toda variable usada en un cliclo debe ser previamente declarada.
+
+*************************Bloques********************************
+Para realizar operaciones matematicas o decisiones de más de dos
+operandos se hace uso de bloques ()
+Ejemplo:
+	Hacer a,(a+2-b)!
+	hacer b, (a+b) * b!	
+	Si (a > b) ó (a < 0) tons
+		...
+	fin_si
+Su objetivo es que en toda operación solo haya dos operandos en
+la sentencia principal.
+
+
+
+
+
+
+
+

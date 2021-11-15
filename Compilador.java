@@ -21,6 +21,7 @@ import java.util.regex.Pattern;
 public class Compilador {              
     ArrayList contenido;  
     int cs, ds, es, num = 0; 
+    Stack<String> bloques;
     
     /**
      * Lee el archivo y crea el codigo en ensamblador   
@@ -52,7 +53,7 @@ public class Compilador {
             ArrayList varNom = new ArrayList();  
             
             //Sirve para guardar etiquetas que hacen referencia a bloques de codigo   
-            Stack<String> bloques = new Stack<String>();
+            bloques = new Stack<String>();
             
             String line, aux, aux2;
             String esc = "";
@@ -308,6 +309,7 @@ public class Compilador {
                         }   
                         
                         else if(line.equals("si") || line.equals("o_si")  ){   
+                                                     
                             /*
                              Todo if esta encerrado bajo dos etiquetas de modo
                              que todo if tiene su propio bloque local y pone un 
@@ -326,25 +328,15 @@ public class Compilador {
                             bloques.push("osi"+num); //agregar nombre etiqueta local
                                 
                             line = entrada.nextLine();                            
-                            System.out.println(line);        
+                            System.out.println(line);  
                             
-                            index = indexOpComp(line);
-                            /*
                             //Se determina el index donde está el operando
-                            index = line.indexOf('<');
-                            if(index == -1){
-                                index = line.indexOf('>');
-                                if(index == -1){
-                                    index = line.indexOf('\\');
-                                    if (index == -1)
-                                        index = line.indexOf('=');                                        
-                                }
-                            }*/
+                            index = indexOp(line);                                     
+                            System.out.println(line.charAt(index));
                             
                             operando = line.charAt(index);
                             if(line.indexOf('#') == -1){ //No hay una cadena                            
-                                esc = line.substring(0, index).strip(); //Primer variable
-                                
+                                esc = line.substring(0, index).strip(); //Primer variable                                  
                                 fo1 = line.indexOf("tons");
                                 
                                 if(line.charAt(index+1)== '='){
@@ -354,21 +346,30 @@ public class Compilador {
                                 }
                                 
                                 //Primera parte de la decision
-                                if(esc.charAt(0)<65){ //no tiene letras es constante
-                                    contenido.add(cs++, "       mov ax,"+esc);
+                                if(esc.charAt(0)=='('){ //Es un bloque
+                                    fo1 = esc.lastIndexOf(')');
+                                   
+                                    bloqueLogico(esc.substring(1, fo1),"bl",0);                                    
+                                    contenido.add(cs++, "       mov ax,dx");
+                                }else if(esc.charAt(0)<65){ //no tiene letras es constante
+                                    contenido.add(cs++, "       mov ax,"+esc);                                
                                 }else{                                    
                                     contenido.add(cs++, "       Lea bx,"+esc);
                                     contenido.add(cs++, "       mov ax,[bx]");
                                 }
                                 
                                 //segunda parte de la decision
-                                if(aux.charAt(0)<65){ //no tiene letras es constante
-                                    contenido.add(cs++, "       cmp ax,"+aux);
+                                if(aux.charAt(0)=='('){ //Es un bloque
+                                    fo1 = aux.lastIndexOf(')');                                    
+                                    bloqueLogico(aux.substring(1, fo1),"blq",0);                              
+                                    contenido.add(cs++, "       cmp ax,dx");
+                                }else if(aux.charAt(0)<65){ //no tiene letras es constante
+                                    contenido.add(cs++, "       cmp ax,"+aux);                                                                    
                                 }else{                                    
                                     contenido.add(cs++, "       Lea bx,"+aux);
                                     contenido.add(cs++, "       cmp ax,[bx]");
                                 }
-                                
+                                                                
                                 //Considera los saltos con signo de ensamblador
                                 switch(operando){                                            
                                      case '>':                                              
@@ -407,7 +408,7 @@ public class Compilador {
                             line = entrada.nextLine(); 
                             System.out.println(line); 
                             
-                            index = indexOpComp(line);
+                            index = indexOp(line);
                             operando = line.charAt(index);
                             aux = line.substring(0, index);                                                                                    
                             
@@ -556,10 +557,10 @@ public class Compilador {
     /**
      * Recibe un linea y regresa el index donde hay un operando de comparacion.
      * @param line
-     * @return 
+     * @return index 
      */
-    public int indexOpComp(String line){
-        int index;
+    public int indexOp(String cad){
+        /*int index;
         index = line.indexOf('<');
         if(index == -1){
             index = line.indexOf('>');
@@ -569,8 +570,27 @@ public class Compilador {
                     index = line.indexOf('=');                                        
             }
         }
-        return index;
-    }
+        return index;*/
+  
+       boolean flag = false, par = false;
+       for(int i = 0; i < cad.length(); i++){
+            if(par == false){
+                if(cad.charAt(i) == '+' || cad.charAt(i) == '-' || cad.charAt(i) == '/' || cad.charAt(i) == '*' 
+                              || cad.charAt(i) == '<' || cad.charAt(i) == '>' || cad.charAt(i) == '='
+                              || cad.charAt(i) == 'ó' || cad.charAt(i) == 'í'){
+                    return i;
+                }
+                else if(cad.charAt(i) == '('){
+                    par = true;
+                }
+            } else{
+                if(cad.charAt(i) == ')'){
+                    par = false;
+                }
+            }
+       }
+       return -1;//no se encontro el indice
+    }     
     
     /**
      * Lee una expresión aritmetica y pone el resultado en el registro ax de
@@ -672,6 +692,129 @@ public class Compilador {
                 operando = expresion.charAt(fo1);        
             index = fo1+1;  
         }
+    }
+   
+    /**
+     * Guarda en el registro DX el resultado 1 o 0 
+     * de una operacion logica.
+     * @param bloque 
+     */
+    private int bloqueLogico(String bloque, String etiq, int i) {        
+        int index; 
+        char operando;
+        String pv,sv;
+        //Se determina el index donde está el operando
+        index = indexOp(bloque);                          
+        
+        operando = bloque.charAt(index);                                                      
+        pv = bloque.substring(0, index).strip(); //Primer variable                                
+       
+        if(bloque.charAt(index+1)== '='){
+            sv = bloque.substring(index+2).strip();
+        }else{
+            sv = bloque.substring(index+1).strip();
+        }
+        //Guardamos ax que tiene cosas importantes y para que no sepierd en el procedimeitno
+        contenido.add(cs++, "       push ax");
+        //Primera parte de la decision
+        if(pv.trim().charAt(0)=='('){ //Es un bloque
+            System.out.println("ES UN BLOQUE "+i);
+            index = pv.lastIndexOf(')');
+            etiq=etiq+i;
+            i = bloqueLogico(pv.substring(1, index), etiq, i) + 1;  
+            contenido.add(cs++, "       mov ax,dx");            
+        }else if(pv.charAt(0)<65){ //no tiene letras es constante
+            contenido.add(cs++, "       mov ax,"+pv);                    
+        }else{
+            contenido.add(cs++, "       Lea bx,"+pv);
+            contenido.add(cs++, "       mov ax,[bx]");
+        }
+                                
+        //segunda parte de la decision
+        if(sv.trim().charAt(0)=='('){ //Es un bloque
+            System.out.println("SEGUNDA ES UN BLOQUE "+i);
+            index = sv.lastIndexOf(')');                    
+            etiq=etiq+i;
+            i = bloqueLogico(pv.substring(1, index), etiq, i) + 1;        
+        }else if(sv.charAt(0)<65){ //no tiene letras es constante
+            contenido.add(cs++, "       mov dx,"+sv);                                                        
+        }else{                                    
+            contenido.add(cs++, "       Lea bx,"+sv);
+            contenido.add(cs++, "       mov dx,[bx]");
+            
+        }
+                        
+        ///Tenemos que tomar decisiones con la comparación
+        ///AaAAAAaaaaaaaaaaaaaaaaaaa
+        //Guardamos en dx el resultado 1 o 0 de la operacion
+        //Considera los saltos con signo de ensamblador
+        contenido.add(cs++, "       mov dx,0");   
+        bloques.push(etiq+num+i);
+        switch(operando){                                            
+            case '>':           
+                contenido.add(cs++, "       cmp ax,dx");
+                if(bloque.charAt(index+1)== '='){ //es numero constante
+                    contenido.add(cs++, "       jl "+ bloques.peek()+ ";>=");     
+                }else{                                                                                                
+                    contenido.add(cs++, "       jle "+ bloques.peek()+ ";>");     
+                }
+            break;                                                
+            case '<':      
+                contenido.add(cs++, "       cmp ax,dx");
+                if(bloque.charAt(index+1)== '='){ //es numero constante                                                
+                    contenido.add(cs++, "       jg "+ bloques.peek()+ ";<=");  
+                }else{
+                    contenido.add(cs++, "       jge "+ bloques.peek()+ ";<");  
+                }
+            break;
+            case '/':      
+                contenido.add(cs++, "       cmp ax,dx");
+                contenido.add(cs++, "       je "+ bloques.peek()+ ";=/");  
+            break;
+            case 'ó':                   
+                contenido.add(cs++, "       OR ax,dx");               
+                contenido.add(cs++, "       cmp ax,0");                
+                contenido.add(cs++, "       je "+ bloques.peek()+ ";ó");  
+            break;
+            case 'í':     
+                contenido.add(cs++, "       AND ax,dx");               
+                contenido.add(cs++, "       cmp ax,0");           
+                contenido.add(cs++, "       je "+ bloques.peek()+ ";í");  
+            break;
+            default:  
+                contenido.add(cs++, "       cmp ax,dx");
+                contenido.add(cs++, "       jne "+ bloques.peek()+ ";=");                                                                                           
+         }      
+        contenido.add(cs++, "       dec dx");  //Hacer dx 1
+        System.out.println("ES VERDADERO ES UNO");
+        contenido.add(cs++, "       "+bloques.pop()+":");         
+        
+        
+        //Sacamos las cosas importantes de ax
+        contenido.add(cs++, "       pop ax");
+        /*
+                            Agreguemos los ó
+                            cmp ax,0 
+                            jge nss11
+                                mov dl,0
+                                jmp seva
+                            nss11:
+                                 mov dl,0FFh
+                            seva:
+
+                            cmp ax,0 
+                            jge nss12
+                                mov dh,0
+                                jmp seva2
+                            nss12:
+                                 mov dh,0FFh
+                            seva2:
+                            or dl,dh
+                            cmp dl,0
+                            je deci1 ;ó
+                                ...
+                            deci1   */
+        return i;
     }
 }
 
