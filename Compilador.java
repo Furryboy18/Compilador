@@ -308,8 +308,7 @@ public class Compilador {
                                 contenido.add(cs++, "       INT 21H");                                
                         }   
                         
-                        else if(line.equals("si") || line.equals("o_si")  ){   
-                                                     
+                        else if(line.equals("si") || line.equals("o_si")  ){                                                        
                             /*
                              Todo if esta encerrado bajo dos etiquetas de modo
                              que todo if tiene su propio bloque local y pone un 
@@ -559,25 +558,22 @@ public class Compilador {
      * @param line
      * @return index 
      */
-    public int indexOp(String cad){
-        /*int index;
-        index = line.indexOf('<');
-        if(index == -1){
-            index = line.indexOf('>');
-            if(index == -1){
-                index = line.indexOf('\\');
-                if (index == -1)
-                    index = line.indexOf('=');                                        
-            }
-        }
-        return index;*/
-  
-       boolean flag = false, par = false;
-       for(int i = 0; i < cad.length(); i++){
+    public int indexOp(String cad){            
+        int i, end;
+        if(cad.charAt(0)=='('){
+            i=1;
+            end=cad.length()-1;
+        }else{
+            i=0;
+            end=cad.length();
+        }            
+        boolean flag = false, par = false;
+        for(i = i; i < end; i++){
             if(par == false){
                 if(cad.charAt(i) == '+' || cad.charAt(i) == '-' || cad.charAt(i) == '/' || cad.charAt(i) == '*' 
                               || cad.charAt(i) == '<' || cad.charAt(i) == '>' || cad.charAt(i) == '='
                               || cad.charAt(i) == 'ó' || cad.charAt(i) == 'í'){
+                                    
                     return i;
                 }
                 else if(cad.charAt(i) == '('){
@@ -597,46 +593,74 @@ public class Compilador {
      * ensamblador.
      * @param expresion 
      */
-    public void aritmetica(String expresion){
+    public boolean aritmetica(String expresion){
         int fo1, fo2, index = 0;
         String aux;
         char operando;
+        boolean bloque = false;
+        int bloq1, bloq2 = 0;
 
-        //System.out.println(expresion);
-        //Se deja ax(ensamblador) en 0 para ir agregando lo que se desea asignar
-        contenido.add(cs++, "       mov ax, 0"); 
-                                
-        fo1 = index;                                
+        System.out.println(">>"+expresion+"<");
+                       
         operando = '+';
+        
 //        index++;
-        while(fo1<expresion.length()-1){
-                                                                 
-            fo1 = expresion.indexOf('+', index);
-            if (fo1 == -1 )
-                fo1 = expresion.length();                                
-            fo2 = expresion.indexOf('-', index);
-            if (fo2 != -1 )                                    
-                if(fo2<fo1)
-                    fo1 = fo2;
-            fo2 = expresion.indexOf('*',index);
-            if (fo2 != -1 )                                    
-                if(fo2<fo1)
-                    fo1 = fo2;
-            fo2 = expresion.indexOf('/',index);
-            if (fo2 != -1 )                                    
-                if(fo2<fo1)
-                    fo1 = fo2;  
-            
-            aux = expresion.substring(index,fo1).strip();
+        if(expresion.equals("")){                 
+            return false;
+        }
+        
+        //Se deja ax(ensamblador) en 0 para ir agregando lo que se desea asignar     
+        contenido.add(cs++, "       mov ax, 0"); 
+        fo1 = index;
+        if(expresion.charAt(0)=='('){
+            expresion=expresion.substring(1, expresion.length()-2);
+        }        
 
-            //Primer operando  
+        while(fo1<expresion.length()-1){                     
+            bloq1=expresion.indexOf('(',index);          
+                
+            if(bloq1 != -1){ //SI Hay un bloque a continuacion           
+                bloq2=expresion.lastIndexOf(')');                                          
+            }else{
+                //Si no hau un bloque bloq1 tiene un valor maximo
+                bloq1=expresion.length()+2; 
+            }
+            
+            //La posición del operando
+            fo1=indexOp(expresion.substring(index));                 
+            fo1=fo1+index;    
+            
+            //fo1 tiene la primera ocurrencia de un operando
+            //Si un bloque va primero que el operando buscamos el operando despues del bloque
+            if(fo1>bloq1){                   
+                bloque = true;
+                contenido.add(cs++, "       push ax");                 
+                aux=(expresion.substring(bloq1+1, bloq2));                      
+                aritmetica(aux);           
+                contenido.add(cs++, "       mov dx,ax"); 
+                contenido.add(cs++, "       pop ax"); 
+                fo1=indexOp(expresion.substring(bloq2+1));
+                fo1=fo1+bloq2+1;                
+            }else{
+                //Se asigna a aux la variable antes del operando
+                if(index>fo1)   {        
+                    aux = expresion.substring(index).strip();    
+                    fo1=expresion.length();
+                }else
+                    aux = expresion.substring(index,fo1).strip();                  
+            }       
+        
+            //Se hace la operación necesaria con la variable y el operando anterior
             switch(operando){                                            
                 case '-':
-                    contenido.add(cs++, "       \n;resta");           
-                    if(aux.charAt(0)<58){ //es numero constante
-
-                        contenido.add(cs++, "       sub ax, "+ aux); 
+                    contenido.add(cs++, "       \n;resta");                         
+                    if(bloque){
+                        contenido.add(cs++, "       sub ax, dx"); 
                         contenido.add(cs++, "       jo exrang");
+                        bloque= false;
+                    }else if(aux.charAt(0)<58){ //es numero constante
+                        contenido.add(cs++, "       sub ax, "+ aux); 
+                        contenido.add(cs++, "       jo exrang");                    
                     }else{                                                                                                
                         contenido.add(cs++, "       Lea bx, "+ aux);
                         contenido.add(cs++, "       sub ax, [bx]");  
@@ -644,11 +668,15 @@ public class Compilador {
                     }
                     break;                                                
                 case '*':
-                    contenido.add(cs++, "       \n;multi"); 
-                    if(aux.charAt(0)<58){ //es numero constante                                                
+                    contenido.add(cs++, "       \n;multi");                    
+                    if(bloque){
+                        contenido.add(cs++, "       imul dx"); 
+                        contenido.add(cs++, "       jo exrang");
+                        bloque= false;
+                    }else if(aux.charAt(0)<58){ //es numero constante                                                
                         contenido.add(cs++, "       mov bx, "+ aux); 
                         contenido.add(cs++, "       imul bx");
-                        contenido.add(cs++, "       jo exrang");
+                        contenido.add(cs++, "       jo exrang");                    
                     }else{
                         contenido.add(cs++, "       Lea bx, "+ aux);
                         contenido.add(cs++, "       imul word ptr [bx]");  
@@ -657,12 +685,16 @@ public class Compilador {
                     break;
                 case '/':
                     contenido.add(cs++, "       \n;divi"); 
-                    if(aux.charAt(0)<58){ //es numero constante     
+                    if(bloque){
+                        contenido.add(cs++, "       idiv dx"); 
+                        contenido.add(cs++, "       jo exrang");
+                        bloque= false;                    
+                    }else if(aux.charAt(0)<58){ //es numero constante     
                         contenido.add(cs++, "       mov dx, 0"); 
                         contenido.add(cs++, "       mov bx, "+ aux); 
                         contenido.add(cs++, "       idiv bx"); 
                         contenido.add(cs++, "       jo exrang");
-                        //contenido.add(cs++, "       mov ah,0"); 
+                        //contenido.add(cs++, "       mov ah,0");  
                     }else{
                         contenido.add(cs++, "       mov dx, 0"); 
                         contenido.add(cs++, "       Lea bx, "+ aux);
@@ -671,11 +703,14 @@ public class Compilador {
                                                     //contenido.add(cs++, "       mov ah,0"); 
                     }
                     break;
-                default:    
-                    
+                default:                        
                     if(aux.length()>0){
                         contenido.add(cs++, "       \n;sumaa"); 
-                        if(aux.charAt(0)<58 ){ //es numero constante                                                
+                        if(bloque){
+                            contenido.add(cs++, "       add dx"); 
+                            contenido.add(cs++, "       jo exrang");
+                            bloque= false;                        
+                        }else if(aux.charAt(0)<58 ){ //es numero constante                                                
                             contenido.add(cs++, "       add ax, "+ aux); 
                             contenido.add(cs++, "       jo exrang");
                         }else{
@@ -688,16 +723,19 @@ public class Compilador {
                         }
                     }                                                                                            
             }
+            
+            //El operando encontrado es guardado para la siguiente ronda
             if(fo1<expresion.length()-1)
                 operando = expresion.charAt(fo1);        
             index = fo1+1;  
         }
+        return true;
     }
    
     /**
      * Guarda en el registro DX el resultado 1 o 0 
      * de una operacion logica.
-     * @param bloque 
+     * @param bloque String con el contenido de los parentesis
      */
     private int bloqueLogico(String bloque, String etiq, int i) {        
         int index; 
@@ -717,8 +755,7 @@ public class Compilador {
         //Guardamos ax que tiene cosas importantes y para que no sepierd en el procedimeitno
         contenido.add(cs++, "       push ax");
         //Primera parte de la decision
-        if(pv.trim().charAt(0)=='('){ //Es un bloque
-            System.out.println("ES UN BLOQUE "+i);
+        if(pv.trim().charAt(0)=='('){ //Es un bloque            
             index = pv.lastIndexOf(')');
             etiq=etiq+i;
             i = bloqueLogico(pv.substring(1, index), etiq, i) + 1;  
@@ -743,9 +780,7 @@ public class Compilador {
             contenido.add(cs++, "       mov dx,[bx]");
             
         }
-                        
-        ///Tenemos que tomar decisiones con la comparación
-        ///AaAAAAaaaaaaaaaaaaaaaaaaa
+                              
         //Guardamos en dx el resultado 1 o 0 de la operacion
         //Considera los saltos con signo de ensamblador
         contenido.add(cs++, "       mov dx,0");   
@@ -786,34 +821,11 @@ public class Compilador {
                 contenido.add(cs++, "       jne "+ bloques.peek()+ ";=");                                                                                           
          }      
         contenido.add(cs++, "       dec dx");  //Hacer dx 1
-        System.out.println("ES VERDADERO ES UNO");
         contenido.add(cs++, "       "+bloques.pop()+":");         
-        
-        
+                
         //Sacamos las cosas importantes de ax
         contenido.add(cs++, "       pop ax");
-        /*
-                            Agreguemos los ó
-                            cmp ax,0 
-                            jge nss11
-                                mov dl,0
-                                jmp seva
-                            nss11:
-                                 mov dl,0FFh
-                            seva:
-
-                            cmp ax,0 
-                            jge nss12
-                                mov dh,0
-                                jmp seva2
-                            nss12:
-                                 mov dh,0FFh
-                            seva2:
-                            or dl,dh
-                            cmp dl,0
-                            je deci1 ;ó
-                                ...
-                            deci1   */
+        
         return i;
     }
 }

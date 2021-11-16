@@ -327,6 +327,7 @@ public class TablaDeTokens {
         reservadas.add("fin");
         reservadas.add("leer");
         reservadas.add("leern");
+        reservadas.add("c"); //ensamblador es reservada da error usarla de variable
     }
     
     public void agregarToken(String lexema, String token, String tipo/*, int linea*/){

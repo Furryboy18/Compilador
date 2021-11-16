@@ -96,6 +96,9 @@ Ejemplo:
 	fin_si
 Su objetivo es que en toda operación solo haya dos operandos en
 la sentencia principal.
+Nota: En una operación aritmetica puede haber más de un operando,
+ejemplo (a+b+c), pero en una operacion logica solo puede haber dos 
+a la vez.
 
 
 
