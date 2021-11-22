@@ -361,35 +361,49 @@ public class Compilador {
                                 if(aux.charAt(0)=='('){ //Es un bloque
                                     fo1 = aux.lastIndexOf(')');                                    
                                     bloqueLogico(aux.substring(1, fo1),"blq",0);                              
-                                    contenido.add(cs++, "       cmp ax,dx");
+                                    
                                 }else if(aux.charAt(0)<65){ //no tiene letras es constante
-                                    contenido.add(cs++, "       cmp ax,"+aux);                                                                    
+                                    contenido.add(cs++, "       mov dx,"+aux);                                                                                                                                                                                                          
                                 }else{                                    
                                     contenido.add(cs++, "       Lea bx,"+aux);
-                                    contenido.add(cs++, "       cmp ax,[bx]");
+                                    contenido.add(cs++, "       mov dx,[bx]");                                                                                                      
                                 }
                                                                 
                                 //Considera los saltos con signo de ensamblador
                                 switch(operando){                                            
-                                     case '>':                                              
+                                     case '>':  
+                                        contenido.add(cs++, "       cmp ax,dx");
                                         if(line.charAt(index+1)== '='){ //es numero constante
                                              contenido.add(cs++, "       jl "+ bloques.peek()+ ";>=");     
                                         }else{                                                                                                
                                             contenido.add(cs++, "       jle "+ bloques.peek()+ ";>");     
                                         }
                                         break;                                                
-                                    case '<':                                        
+                                    case '<':   
+                                        contenido.add(cs++, "       cmp ax,dx");
                                         if(line.charAt(index+1)== '='){ //es numero constante                                                
                                             contenido.add(cs++, "       jg "+ bloques.peek()+ ";<=");  
                                         }else{
                                             contenido.add(cs++, "       jge "+ bloques.peek()+ ";<");  
                                         }
                                         break;
-                                    case '/':                                        
+                                    case '/': 
+                                        contenido.add(cs++, "       cmp ax,dx");
                                         contenido.add(cs++, "       je "+ bloques.peek()+ ";=/");  
                                         break;
-                                    default:             
-                                       contenido.add(cs++, "       jne "+ bloques.peek()+ ";=");                                                                                           
+                                    case 'ó':                   
+                                        contenido.add(cs++, "       OR ax,dx");               
+                                        contenido.add(cs++, "       cmp ax,0");                
+                                        contenido.add(cs++, "       je "+ bloques.peek()+ ";ó");  
+                                    break;
+                                    case 'í':     
+                                        contenido.add(cs++, "       AND ax,dx");               
+                                        contenido.add(cs++, "       cmp ax,0");           
+                                        contenido.add(cs++, "       je "+ bloques.peek()+ ";í");  
+                                    break;
+                                    default:    
+                                        contenido.add(cs++, "       cmp ax,dx");
+                                        contenido.add(cs++, "       jne "+ bloques.peek()+ ";=");                                                                                           
                                 }                                
                             }//Else es cadena
                         }

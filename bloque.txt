@@ -1,0 +1,26 @@
+--Ejemplo de hola mundo
+Procedimiento principal iniciar
+	entero a!
+	entero b!
+	entero cc!
+	hacer a, 5-(6 * 3)!
+	hacer b, 10!	
+	hacer cc, (40 + 3 + 3 + 3 + 1 - 41)!	
+	--si (b>a)ó(b>0) tons
+--		escribir #ambos se cumplen#!
+--	fin_si
+	--si (b>a)ó(b=0) tons
+	--	escribir #uno no cumple#!
+--	fin_si
+
+	si (b>a)í(b=10) tons
+		escribir #ambos cumplen#!
+	fin_si
+
+	escribir b!
+	escribir a!	
+	escribir cc!	
+fin_proc
+
+
+
