@@ -158,7 +158,7 @@ public class Compilador {
                                 esc = line.substring(0, index).strip();
                                 //System.out.println(line);
                                 
-                                aritmetica(line.substring(index + 1 ,line.length() -1));
+                                bloqueAritmetico(line.substring(index + 1 ,line.length() -1));
                                 
                                 //asigna a la variable que deseamos el valor gaurdado en ax(ensamblador) anteriormente
                                 contenido.add(cs++, "       Lea bx, "+esc);  
@@ -325,91 +325,16 @@ public class Compilador {
                                 contenido.add(cs++, "       "+aux+":"); //Etiqueta del bloque local
                             }
                             bloques.push("osi"+num); //agregar nombre etiqueta local
-                                
-                            line = entrada.nextLine();                            
-                            System.out.println(line);  
-                            
-                            //Se determina el index donde está el operando
-                            index = indexOp(line);                                     
-                            System.out.println(line.charAt(index));
-                            
-                            operando = line.charAt(index);
-                            if(line.indexOf('#') == -1){ //No hay una cadena                            
-                                esc = line.substring(0, index).strip(); //Primer variable                                  
-                                fo1 = line.indexOf("tons");
-                                
-                                if(line.charAt(index+1)== '='){
-                                    aux = line.substring(index+2, fo1).strip();                                       
-                                }else{
-                                    aux = line.substring(index+1, fo1).strip();
-                                }
-                                
-                                //Primera parte de la decision
-                                if(esc.charAt(0)=='('){ //Es un bloque
-                                    fo1 = esc.lastIndexOf(')');
-                                   
-                                    bloqueLogico(esc.substring(1, fo1),"bl",0);                                    
-                                    contenido.add(cs++, "       mov ax,dx");
-                                }else if(esc.charAt(0)<65){ //no tiene letras es constante
-                                    contenido.add(cs++, "       mov ax,"+esc);                                
-                                }else{                                    
-                                    contenido.add(cs++, "       Lea bx,"+esc);
-                                    contenido.add(cs++, "       mov ax,[bx]");
-                                }
-                                
-                                //segunda parte de la decision
-                                if(aux.charAt(0)=='('){ //Es un bloque
-                                    fo1 = aux.lastIndexOf(')');                                    
-                                    bloqueLogico(aux.substring(1, fo1),"blq",0);                              
-                                    
-                                }else if(aux.charAt(0)<65){ //no tiene letras es constante
-                                    contenido.add(cs++, "       mov dx,"+aux);                                                                                                                                                                                                          
-                                }else{                                    
-                                    contenido.add(cs++, "       Lea bx,"+aux);
-                                    contenido.add(cs++, "       mov dx,[bx]");                                                                                                      
-                                }
-                                                                
-                                //Considera los saltos con signo de ensamblador
-                                switch(operando){                                            
-                                     case '>':  
-                                        contenido.add(cs++, "       cmp ax,dx");
-                                        if(line.charAt(index+1)== '='){ //es numero constante
-                                             contenido.add(cs++, "       jl "+ bloques.peek()+ ";>=");     
-                                        }else{                                                                                                
-                                            contenido.add(cs++, "       jle "+ bloques.peek()+ ";>");     
-                                        }
-                                        break;                                                
-                                    case '<':   
-                                        contenido.add(cs++, "       cmp ax,dx");
-                                        if(line.charAt(index+1)== '='){ //es numero constante                                                
-                                            contenido.add(cs++, "       jg "+ bloques.peek()+ ";<=");  
-                                        }else{
-                                            contenido.add(cs++, "       jge "+ bloques.peek()+ ";<");  
-                                        }
-                                        break;
-                                    case '/': 
-                                        contenido.add(cs++, "       cmp ax,dx");
-                                        contenido.add(cs++, "       je "+ bloques.peek()+ ";=/");  
-                                        break;
-                                    case 'ó':                   
-                                        contenido.add(cs++, "       OR ax,dx");               
-                                        contenido.add(cs++, "       cmp ax,0");                
-                                        contenido.add(cs++, "       je "+ bloques.peek()+ ";ó");  
-                                    break;
-                                    case 'í':     
-                                        contenido.add(cs++, "       AND ax,dx");               
-                                        contenido.add(cs++, "       cmp ax,0");           
-                                        contenido.add(cs++, "       je "+ bloques.peek()+ ";í");  
-                                    break;
-                                    default:    
-                                        contenido.add(cs++, "       cmp ax,dx");
-                                        contenido.add(cs++, "       jne "+ bloques.peek()+ ";=");                                                                                           
-                                }                                
-                            }//Else es cadena
+                                                                                        
+                            line = entrada.nextLine(); 
+                            System.out.println(line);
+                            index= line.indexOf("tons");
+                            line = line.substring(0, index).strip(); 
+                                  
+                            decisionLogica(line);
                         }
                         
-                        else if(line.equals("fin_si")){ 
-                            
+                        else if(line.equals("fin_si")){                             
                             line = entrada.nextLine();                            
                             System.out.println(line);                            
                             esc = bloques.pop();                              
@@ -421,55 +346,14 @@ public class Compilador {
                             line = entrada.nextLine(); 
                             System.out.println(line); 
                             
-                            index = indexOp(line);
-                            operando = line.charAt(index);
-                            aux = line.substring(0, index);                                                                                    
-                            
+                            line = line.substring(0, line.length() - 4); 
+                                                                                                                                                                                                                          
                             contenido.add(cs++, "   ;mientras");           
                             bloques.push("in"+num);                            
                             contenido.add(cs++, "       "+ bloques.peek()+":"); 
+                            bloques.push("sa"+num); 
                             
-                            aritmetica(aux);
-                            //System.out.println("artimetica1 "+aux);
-                            //asigna al registro SI el valor gaurdado en ax(ensamblador) por aritmetica()
-                            contenido.add(cs++, "       mov si, ax");  
-                            
-                            aux = line.substring(index+1, line.length() - 4);
-                            aritmetica(aux);                            
-                            //asigna al registro BP el valor guardado en ax(ensamblador) por aritmetica()                            
-                            contenido.add(cs++, "       mov bp, ax"); 
-                            
-                            
-                            contenido.add(cs++, "       cmp si,bp");           
-                                                        
-                            switch(operando){                                            
-                                case '>':                                              
-                                    if(line.charAt(index+1)== '='){ //es numero constante                                         
-                                        bloques.push("sa"+num);
-                                        contenido.add(cs++, "       jl "+ bloques.peek()+ ";>=");    
-                                                                                
-                                    }else{                                                                                                                                       
-                                        bloques.push("sa"+num);
-                                        contenido.add(cs++, "       jle "+ bloques.peek()+ ";>");                                           
-                                    }
-                                    break;                                                
-                                case '<':                                        
-                                    if(line.charAt(index+1)== '='){ //es numero constante                                                                                        
-                                        bloques.push("sa"+num);
-                                       contenido.add(cs++, "       jg "+ bloques.peek()+ ";<=");                                         
-                                    }else{                                        
-                                        bloques.push("sa"+num);
-                                        contenido.add(cs++, "       jge "+ bloques.peek()+ ";<");                                          
-                                    }
-                                    break;
-                                case '/':                                                                            
-                                    bloques.push("sa"+num);
-                                    contenido.add(cs++, "       je "+ bloques.peek()+ ";=/");                                      
-                                    break;
-                                default:                                                 
-                                    bloques.push("sa"+num);
-                                    contenido.add(cs++, "       jne "+ bloques.peek()+ ";=");                                          
-                            }                                                                                                                                                                                                                                    
+                            decisionLogica(line);                                                                                                                                                                                                                                                                                  
                         }
                         
                         else if(line.equals("fin_mientras")){
@@ -555,9 +439,7 @@ public class Compilador {
                         else if(line.equals("!")){                            
                             System.out.print("\n");
                             entrada.nextLine();
-                        }
-                        
-                        
+                        }                                                
                         
                     }catch(NoSuchElementException ex){}                                                            
             }                        
@@ -574,14 +456,17 @@ public class Compilador {
      */
     public int indexOp(String cad){            
         int i, end;
+        boolean par;
         if(cad.charAt(0)=='('){
             i=1;
             end=cad.length()-1;
+            par = true;
         }else{
             i=0;
             end=cad.length();
+            par  = false;
         }            
-        boolean flag = false, par = false;
+        
         for(i = i; i < end; i++){
             if(par == false){
                 if(cad.charAt(i) == '+' || cad.charAt(i) == '-' || cad.charAt(i) == '/' || cad.charAt(i) == '*' 
@@ -600,21 +485,19 @@ public class Compilador {
             }
        }
        return -1;//no se encontro el indice
-    }     
+    }       
     
     /**
      * Lee una expresión aritmetica y pone el resultado en el registro ax de
      * ensamblador.
      * @param expresion 
      */
-    public boolean aritmetica(String expresion){
+    public boolean bloqueAritmetico(String expresion){
         int fo1, fo2, index = 0;
         String aux;
         char operando;
         boolean bloque = false;
-        int bloq1, bloq2 = 0;
-
-        System.out.println(">>"+expresion+"<");
+        int bloq1, bloq2 = 0;       
                        
         operando = '+';
         
@@ -650,7 +533,7 @@ public class Compilador {
                 bloque = true;
                 contenido.add(cs++, "       push ax");                 
                 aux=(expresion.substring(bloq1+1, bloq2));                      
-                aritmetica(aux);           
+                bloqueAritmetico(aux);           
                 contenido.add(cs++, "       mov dx,ax"); 
                 contenido.add(cs++, "       pop ax"); 
                 fo1=indexOp(expresion.substring(bloq2+1));
@@ -744,6 +627,149 @@ public class Compilador {
             index = fo1+1;  
         }
         return true;
+    }
+    
+    
+    /**
+     * Evalua una expresion y determina que salto se deber de hacer.
+     * El salto lo hace en base del ultimo valor en bloques
+     * @return 
+     */
+    private void decisionLogica(String line){
+        String esc,aux;
+        int fo1;
+        boolean neg=false, neg2=false;
+                            //Se determina el index donde está el operando
+        int index = indexOp(line);   
+        
+        
+        if (index==-1){//Toto está dentro de un ()
+            if(line.strip().charAt(0)=='ñ'){                 
+                line=line.substring(1);
+                neg=true;
+            }
+            if(line.charAt(0)=='('){
+                line=line.substring(1,line.length()-1);                                      
+            }
+            index = indexOp(line);            
+        }
+            
+        char operando = line.charAt(index);
+        if(line.indexOf('#') == -1){ //No hay una cadena                            
+            esc = line.substring(0, index).strip(); //Primer variable                                                                  
+                                
+            if(line.charAt(index+1)== '='){
+                aux = line.substring(index+2).strip();                                       
+            }else{
+                aux = line.substring(index+1).strip();
+            }
+                                
+            //Primera parte de la decision
+            if(esc.charAt(0)=='ñ'){
+                System.out.print("Se niega");
+                neg2 = true;
+                esc= esc.substring(1).strip();
+            }
+            
+            if(esc.charAt(0)=='('){ //Es un bloque
+                fo1 = esc.lastIndexOf(')'); 
+                bloqueLogico(esc.substring(1, fo1),"bq",0);  
+                contenido.add(cs++, "       mov ax,dx");
+            }else if(esc.charAt(0)<65){ //no tiene letras es constante
+                contenido.add(cs++, "       mov ax,"+esc);                                
+            }else{                                    
+                contenido.add(cs++, "       Lea bx,"+esc);
+                contenido.add(cs++, "       mov ax,[bx]");
+            }
+            
+            if(neg2){
+                System.out.print("Negado");
+                contenido.add(cs++, "       NOT ax");
+            }
+                                
+            //segunda parte de la decision            
+            if(aux.charAt(0)=='ñ'){
+                neg2 = true;               
+                aux= aux.substring(1).strip();
+            }
+            
+            if(aux.charAt(0)=='('){ //Es un bloque
+                fo1 = aux.lastIndexOf(')');                                    
+                bloqueLogico(aux.substring(1, fo1),"blq",0);                              
+                                    
+            }else if(aux.charAt(0)<65){ //no tiene letras es constante
+                contenido.add(cs++, "       mov dx,"+aux);                                                                                                                                                                                                          
+            }else{                                    
+                contenido.add(cs++, "       Lea bx,"+aux);
+                contenido.add(cs++, "       mov dx,[bx]");                                                                                                      
+            }
+            
+            if(neg2){
+                System.out.print("Negado");
+                contenido.add(cs++, "       NOT dx");
+            }
+                                                                
+            //Considera los saltos con signo de ensamblador
+            switch(operando){                                            
+                case '>':  
+                                        contenido.add(cs++, "       cmp ax,dx");
+                                        if(line.charAt(index+1)== '='){ //es numero constante
+                                            if(neg)
+                                                contenido.add(cs++, "       jnl "+ bloques.peek()+ ";>="); 
+                                            else
+                                                contenido.add(cs++, "       jl "+ bloques.peek()+ ";>=");     
+                                        }else{  
+                                            if(neg)
+                                                contenido.add(cs++, "       jnle "+ bloques.peek()+ ";>="); 
+                                            else                                                
+                                                contenido.add(cs++, "       jle "+ bloques.peek()+ ";>");     
+                                        }
+                                        break;                                                
+                case '<':   
+                                        contenido.add(cs++, "       cmp ax,dx");
+                                        if(line.charAt(index+1)== '='){ //es numero constante     
+                                            if(neg)
+                                                contenido.add(cs++, "       jng "+ bloques.peek()+ ";not <="); 
+                                            else   
+                                                contenido.add(cs++, "       jg "+ bloques.peek()+ ";<=");  
+                                        }else{
+                                            if(neg)
+                                                contenido.add(cs++, "       jnge "+ bloques.peek()+ ";not <"); 
+                                            else   
+                                                contenido.add(cs++, "       jge "+ bloques.peek()+ ";<");  
+                                        }
+                                        break;
+                case '/': 
+                                        contenido.add(cs++, "       cmp ax,dx");
+                                        if(!neg)
+                                            contenido.add(cs++, "       je "+ bloques.peek()+ ";=/");  
+                                        else
+                                            contenido.add(cs++, "       jne "+ bloques.peek()+ ";=");                                                                                                  
+                                        break;
+                case 'ó':                   
+                                        contenido.add(cs++, "       OR ax,dx");     
+                                        if(neg)
+                                            contenido.add(cs++, "       NOT ax");
+                                        contenido.add(cs++, "       cmp ax,0");                
+                                        contenido.add(cs++, "       je "+ bloques.peek()+ ";ó");  
+                                    break;
+                case 'í':     
+                                        contenido.add(cs++, "       AND ax,dx");    
+                                        if(neg)
+                                            contenido.add(cs++, "       NOT ax");
+                                        contenido.add(cs++, "       cmp ax,0");           
+                                        contenido.add(cs++, "       je "+ bloques.peek()+ ";í");  
+                                    break;
+                default:   
+                    contenido.add(cs++, "       cmp ax,dx");
+                    if(!neg){                        
+                        contenido.add(cs++, "       jne "+ bloques.peek()+ ";=");   
+                    }else{                        
+                        contenido.add(cs++, "       je "+ bloques.peek()+ ";/=");   
+                    }
+                                                                                                            
+            }                                
+        }//Else es cadena
     }
    
     /**

@@ -33,7 +33,7 @@ public class TablaDeTokens {
         
         ArrayList conte = getTokenizar();
         ArrayList reserv = getReservadas();
-        String[] comp = {"<",">","<=",">=","=","/=","ó","í"};
+        String[] comp = {"<",">","<=",">=","=","/=","ó","í","ñ"};
         String[] arit = {"*","+","-","/","(",")"};
         String act = "";
         String tip = "";//ultimo tipo de variable registrado
